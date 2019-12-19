@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Sofinco Epayment module for Magento
+ *
+ * Feel free to contact Sofinco at support@paybox.com for any
+ * question.
+ *
+ * LICENSE: This source file is subject to the version 3.0 of the Open
+ * Software License (OSL-3.0) that is available through the world-wide-web
+ * at the following URI: http://opensource.org/licenses/OSL-3.0. If
+ * you did not receive a copy of the OSL-3.0 license and are unable
+ * to obtain it through the web, please send a note to
+ * support@paybox.com so we can mail you a copy immediately.
+ *
+ * @version   1.0.8
+ * @author    BM Services <contact@bm-services.com>
+ * @copyright 2012-2017 Sofinco
+ * @license   http://opensource.org/licenses/OSL-3.0
+ * @link      http://www.paybox.com/
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <type name="Magento\Checkout\Model\CompositeConfigProvider">
+        <arguments>
+            <argument name="configProviders" xsi:type="array">
+                <item name="sfco_cb_config_provider" xsi:type="object">Sofinco\Epayment\Model\Ui\SfcocbConfigProvider</item>
+                <item name="sfco_threetime_config_provider" xsi:type="object">Sofinco\Epayment\Model\Ui\SfcothreetimeConfigProvider</item>
+                <item name="sfco_prepaid_config_provider" xsi:type="object">Sofinco\Epayment\Model\Ui\SfcoprepaidConfigProvider</item>
+                <item name="sfco_paybuttons_config_provider" xsi:type="object">Sofinco\Epayment\Model\Ui\SfcopaybuttonsConfigProvider</item>
+                <item name="sfco_private_config_provider" xsi:type="object">Sofinco\Epayment\Model\Ui\SfcoprivateConfigProvider</item>
+                <item name="sfco_financial_config_provider" xsi:type="object">Sofinco\Epayment\Model\Ui\SfcofinancialConfigProvider</item>
+                <item name="sfco_s3xcb_config_provider" xsi:type="object">Sofinco\Epayment\Model\Ui\Sfcos3xcbConfigProvider</item>
+            </argument>
+        </arguments>
+    </type>
+    <type name="Sofinco\Epayment\Block\Info">
+        <arguments>
+            <argument name="data" xsi:type="array">
+                <item xsi:type="string" name="is_secure_mode">1</item>
+            </argument>
+        </arguments>
+    </type>
+    <type name="Magento\Framework\View\Layout">
+        <plugin name="sfco_layout_plugin" type="Sofinco\Epayment\Plugin\Framework\View\LayoutPlugin" sortOrder="1" />
+    </type>
+</config>

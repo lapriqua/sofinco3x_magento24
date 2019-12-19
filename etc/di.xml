@@ -1,0 +1,977 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Sofinco Epayment module for Magento
+ *
+ * Feel free to contact Sofinco at support@paybox.com for any
+ * question.
+ *
+ * LICENSE: This source file is subject to the version 3.0 of the Open
+ * Software License (OSL-3.0) that is available through the world-wide-web
+ * at the following URI: http://opensource.org/licenses/OSL-3.0. If
+ * you did not receive a copy of the OSL-3.0 license and are unable
+ * to obtain it through the web, please send a note to
+ * support@paybox.com so we can mail you a copy immediately.
+ *
+ * @version   1.0.0
+ * @author    BM Services <contact@bm-services.com>
+ * @copyright 2012-2017 Sofinco
+ * @license   http://opensource.org/licenses/OSL-3.0
+ * @link      http://www.paybox.com/
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+<!--    <type name="Magento\Framework\Console\CommandList">
+        <arguments>
+            <argument name="commands" xsi:type="array">
+                <item name="sofinco_test_save_order" xsi:type="object">Sofinco\Epayment\Console\Command\OrderSaveCommand</item>
+
+            </argument>
+        </arguments>
+    </type>-->
+    <!-- SFCO_CB -->
+    <!-- Payment Method Facade configuration -->
+    <virtualType name="SfcocbFacade" type="Magento\Payment\Model\Method\Adapter">
+        <arguments>
+            <argument name="code" xsi:type="const">\Sofinco\Epayment\Model\Ui\SfcocbConfigProvider::CODE</argument>
+            <argument name="formBlockType" xsi:type="string">Sofinco\Epayment\Block\Checkout\Payment</argument>
+            <argument name="infoBlockType" xsi:type="string">Sofinco\Epayment\Block\Info</argument>
+            <argument name="valueHandlerPool" xsi:type="object">SfcocbValueHandlerPool</argument>
+            <argument name="commandPool" xsi:type="object">SfcocbCommandPool</argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Configuration reader -->
+    <virtualType name="SfcocbConfig" type="Magento\Payment\Gateway\Config\Config">
+        <arguments>
+            <argument name="methodCode" xsi:type="const">\Sofinco\Epayment\Model\Ui\SfcocbConfigProvider::CODE</argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Logger, initialized with SfcocbConfig -->
+    <virtualType name="SfcocbLogger" type="Magento\Payment\Model\Method\Logger">
+        <arguments>
+            <argument name="config" xsi:type="object">SfcocbConfig</argument>
+        </arguments>
+    </virtualType>
+
+    <type name="Sofinco\Epayment\Gateway\Http\Client\ClientMock">
+        <arguments>
+            <argument name="logger" xsi:type="object">SfcocbLogger</argument>
+        </arguments>
+    </type>
+
+    <!-- Commands infrastructure -->
+    <virtualType name="SfcocbCommandPool" type="Magento\Payment\Gateway\Command\CommandPool">
+        <arguments>
+            <argument name="commands" xsi:type="array">
+                <item name="authorize" xsi:type="string">SfcocbAuthorizeCommand</item>
+                <item name="capture" xsi:type="string">SfcocbCaptureCommand</item>
+                <item name="void" xsi:type="string">SfcocbVoidCommand</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Authorize command -->
+    <virtualType name="SfcocbAuthorizeCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
+        <arguments>
+            <argument name="requestBuilder" xsi:type="object">SfcocbAuthorizationRequest</argument>
+            <argument name="handler" xsi:type="object">SfcocbResponseHandlerComposite</argument>
+            <argument name="transferFactory" xsi:type="object">Sofinco\Epayment\Gateway\Http\TransferFactory</argument>
+            <argument name="client" xsi:type="object">Sofinco\Epayment\Gateway\Http\Client\ClientMock</argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Authorization Request -->
+    <virtualType name="SfcocbAuthorizationRequest" type="Magento\Payment\Gateway\Request\BuilderComposite">
+        <arguments>
+            <argument name="builders" xsi:type="array">
+                <item name="transaction" xsi:type="string">Sofinco\Epayment\Gateway\Request\AuthorizationRequest</item>
+                <item name="mockData" xsi:type="string">Sofinco\Epayment\Gateway\Request\MockDataRequest</item>
+            </argument>
+        </arguments>
+    </virtualType>
+    <type name="Sofinco\Epayment\Gateway\Request\AuthorizationRequest">
+        <arguments>
+            <argument name="config" xsi:type="object">SfcocbConfig</argument>
+        </arguments>
+    </type>
+
+    <!-- Capture command -->
+    <virtualType name="SfcocbCaptureCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
+        <arguments>
+            <argument name="requestBuilder" xsi:type="object">Sofinco\Epayment\Gateway\Request\CaptureRequest</argument>
+            <argument name="handler" xsi:type="object">Sofinco\Epayment\Gateway\Response\TxnIdHandler</argument>
+            <argument name="transferFactory" xsi:type="object">Sofinco\Epayment\Gateway\Http\TransferFactory</argument>
+            <argument name="validator" xsi:type="object">Sofinco\Epayment\Gateway\Validator\ResponseCodeValidator</argument>
+            <argument name="client" xsi:type="object">Sofinco\Epayment\Gateway\Http\Client\ClientMock</argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Capture Request -->
+    <type name="Sofinco\Epayment\Gateway\Request\CaptureRequest">
+        <arguments>
+            <argument name="config" xsi:type="object">SfcocbConfig</argument>
+        </arguments>
+    </type>
+
+    <!-- Void command -->
+    <virtualType name="SfcocbVoidCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
+        <arguments>
+            <argument name="requestBuilder" xsi:type="object">Sofinco\Epayment\Gateway\Request\VoidRequest</argument>
+            <argument name="handler" xsi:type="object">Sofinco\Epayment\Gateway\Response\TxnIdHandler</argument>
+            <argument name="transferFactory" xsi:type="object">Sofinco\Epayment\Gateway\Http\TransferFactory</argument>
+            <argument name="validator" xsi:type="object">Sofinco\Epayment\Gateway\Validator\ResponseCodeValidator</argument>
+            <argument name="client" xsi:type="object">Sofinco\Epayment\Gateway\Http\Client\ClientMock</argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Void Request -->
+    <type name="Sofinco\Epayment\Gateway\Request\VoidRequest">
+        <arguments>
+            <argument name="config" xsi:type="object">SfcocbConfig</argument>
+        </arguments>
+    </type>
+
+    <!-- Response handlers -->
+    <virtualType name="SfcocbResponseHandlerComposite" type="Magento\Payment\Gateway\Response\HandlerChain">
+        <arguments>
+            <argument name="handlers" xsi:type="array">
+                <item name="txnid" xsi:type="string">Sofinco\Epayment\Gateway\Response\TxnIdHandler</item>
+                <item name="fraud" xsi:type="string">Sofinco\Epayment\Gateway\Response\FraudHandler</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Value handlers infrastructure -->
+    <virtualType name="SfcocbValueHandlerPool" type="Magento\Payment\Gateway\Config\ValueHandlerPool">
+        <arguments>
+            <argument name="handlers" xsi:type="array">
+                <item name="default" xsi:type="string">SfcocbConfigValueHandler</item>
+            </argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="SfcocbConfigValueHandler" type="Magento\Payment\Gateway\Config\ConfigValueHandler">
+        <arguments>
+            <argument name="configInterface" xsi:type="object">SfcocbConfig</argument>
+        </arguments>
+    </virtualType>
+
+    <type name="Sofinco\Epayment\Block\Info">
+        <arguments>
+            <argument name="config" xsi:type="object">SfcocbConfig</argument>
+        </arguments>
+    </type>
+    <!-- ! SFCO_CB -->
+
+    <!-- SFCO_THREETIME -->
+    <!-- Payment Method Facade configuration -->
+    <virtualType name="SfcothreetimeFacade" type="Magento\Payment\Model\Method\Adapter">
+        <arguments>
+            <argument name="code" xsi:type="const">\Sofinco\Epayment\Model\Ui\SfcothreetimeConfigProvider::CODE</argument>
+            <argument name="formBlockType" xsi:type="string">Sofinco\Epayment\Block\Checkout\Payment</argument>
+            <argument name="infoBlockType" xsi:type="string">Sofinco\Epayment\Block\Info</argument>
+            <argument name="valueHandlerPool" xsi:type="object">SfcothreetimeValueHandlerPool</argument>
+            <argument name="commandPool" xsi:type="object">SfcothreetimeCommandPool</argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Configuration reader -->
+    <virtualType name="SfcothreetimeConfig" type="Magento\Payment\Gateway\Config\Config">
+        <arguments>
+            <argument name="methodCode" xsi:type="const">\Sofinco\Epayment\Model\Ui\SfcothreetimeConfigProvider::CODE</argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Logger, initialized with SfcothreetimeConfig -->
+    <virtualType name="SfcothreetimeLogger" type="Magento\Payment\Model\Method\Logger">
+        <arguments>
+            <argument name="config" xsi:type="object">SfcothreetimeConfig</argument>
+        </arguments>
+    </virtualType>
+
+    <type name="Sofinco\Epayment\Gateway\Http\Client\ClientMock">
+        <arguments>
+            <argument name="logger" xsi:type="object">SfcothreetimeLogger</argument>
+        </arguments>
+    </type>
+
+    <!-- Commands infrastructure -->
+    <virtualType name="SfcothreetimeCommandPool" type="Magento\Payment\Gateway\Command\CommandPool">
+        <arguments>
+            <argument name="commands" xsi:type="array">
+                <item name="authorize" xsi:type="string">SfcothreetimeAuthorizeCommand</item>
+                <item name="capture" xsi:type="string">SfcothreetimeCaptureCommand</item>
+                <item name="void" xsi:type="string">SfcothreetimeVoidCommand</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Authorize command -->
+    <virtualType name="SfcothreetimeAuthorizeCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
+        <arguments>
+            <argument name="requestBuilder" xsi:type="object">SfcothreetimeAuthorizationRequest</argument>
+            <argument name="handler" xsi:type="object">SfcothreetimeResponseHandlerComposite</argument>
+            <argument name="transferFactory" xsi:type="object">Sofinco\Epayment\Gateway\Http\TransferFactory</argument>
+            <argument name="client" xsi:type="object">Sofinco\Epayment\Gateway\Http\Client\ClientMock</argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Authorization Request -->
+    <virtualType name="SfcothreetimeAuthorizationRequest" type="Magento\Payment\Gateway\Request\BuilderComposite">
+        <arguments>
+            <argument name="builders" xsi:type="array">
+                <item name="transaction" xsi:type="string">Sofinco\Epayment\Gateway\Request\AuthorizationRequest</item>
+                <item name="mockData" xsi:type="string">Sofinco\Epayment\Gateway\Request\MockDataRequest</item>
+            </argument>
+        </arguments>
+    </virtualType>
+    <type name="Sofinco\Epayment\Gateway\Request\AuthorizationRequest">
+        <arguments>
+            <argument name="config" xsi:type="object">SfcothreetimeConfig</argument>
+        </arguments>
+    </type>
+
+    <!-- Capture command -->
+    <virtualType name="SfcothreetimeCaptureCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
+        <arguments>
+            <argument name="requestBuilder" xsi:type="object">Sofinco\Epayment\Gateway\Request\CaptureRequest</argument>
+            <argument name="handler" xsi:type="object">Sofinco\Epayment\Gateway\Response\TxnIdHandler</argument>
+            <argument name="transferFactory" xsi:type="object">Sofinco\Epayment\Gateway\Http\TransferFactory</argument>
+            <argument name="validator" xsi:type="object">Sofinco\Epayment\Gateway\Validator\ResponseCodeValidator</argument>
+            <argument name="client" xsi:type="object">Sofinco\Epayment\Gateway\Http\Client\ClientMock</argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Capture Request -->
+    <type name="Sofinco\Epayment\Gateway\Request\CaptureRequest">
+        <arguments>
+            <argument name="config" xsi:type="object">SfcothreetimeConfig</argument>
+        </arguments>
+    </type>
+
+    <!-- Void command -->
+    <virtualType name="SfcothreetimeVoidCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
+        <arguments>
+            <argument name="requestBuilder" xsi:type="object">Sofinco\Epayment\Gateway\Request\VoidRequest</argument>
+            <argument name="handler" xsi:type="object">Sofinco\Epayment\Gateway\Response\TxnIdHandler</argument>
+            <argument name="transferFactory" xsi:type="object">Sofinco\Epayment\Gateway\Http\TransferFactory</argument>
+            <argument name="validator" xsi:type="object">Sofinco\Epayment\Gateway\Validator\ResponseCodeValidator</argument>
+            <argument name="client" xsi:type="object">Sofinco\Epayment\Gateway\Http\Client\ClientMock</argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Void Request -->
+    <type name="Sofinco\Epayment\Gateway\Request\VoidRequest">
+        <arguments>
+            <argument name="config" xsi:type="object">SfcothreetimeConfig</argument>
+        </arguments>
+    </type>
+
+    <!-- Response handlers -->
+    <virtualType name="SfcothreetimeResponseHandlerComposite" type="Magento\Payment\Gateway\Response\HandlerChain">
+        <arguments>
+            <argument name="handlers" xsi:type="array">
+                <item name="txnid" xsi:type="string">Sofinco\Epayment\Gateway\Response\TxnIdHandler</item>
+                <item name="fraud" xsi:type="string">Sofinco\Epayment\Gateway\Response\FraudHandler</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Value handlers infrastructure -->
+    <virtualType name="SfcothreetimeValueHandlerPool" type="Magento\Payment\Gateway\Config\ValueHandlerPool">
+        <arguments>
+            <argument name="handlers" xsi:type="array">
+                <item name="default" xsi:type="string">SfcothreetimeConfigValueHandler</item>
+            </argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="SfcothreetimeConfigValueHandler" type="Magento\Payment\Gateway\Config\ConfigValueHandler">
+        <arguments>
+            <argument name="configInterface" xsi:type="object">SfcothreetimeConfig</argument>
+        </arguments>
+    </virtualType>
+
+    <type name="Sofinco\Epayment\Block\Info">
+        <arguments>
+            <argument name="config" xsi:type="object">SfcothreetimeConfig</argument>
+        </arguments>
+    </type>
+    <!-- ! SFCO_THREETIME -->
+
+    <!-- SFCO_PREPAID -->
+    <!-- Payment Method Facade configuration -->
+    <virtualType name="SfcoprepaidFacade" type="Magento\Payment\Model\Method\Adapter">
+        <arguments>
+            <argument name="code" xsi:type="const">\Sofinco\Epayment\Model\Ui\SfcoprepaidConfigProvider::CODE</argument>
+            <argument name="formBlockType" xsi:type="string">Sofinco\Epayment\Block\Checkout\Payment</argument>
+            <argument name="infoBlockType" xsi:type="string">Sofinco\Epayment\Block\Info</argument>
+            <argument name="valueHandlerPool" xsi:type="object">SfcoprepaidValueHandlerPool</argument>
+            <argument name="commandPool" xsi:type="object">SfcoprepaidCommandPool</argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Configuration reader -->
+    <virtualType name="SfcoprepaidConfig" type="Magento\Payment\Gateway\Config\Config">
+        <arguments>
+            <argument name="methodCode" xsi:type="const">\Sofinco\Epayment\Model\Ui\SfcoprepaidConfigProvider::CODE</argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Logger, initialized with SfcoprepaidConfig -->
+    <virtualType name="SfcoprepaidLogger" type="Magento\Payment\Model\Method\Logger">
+        <arguments>
+            <argument name="config" xsi:type="object">SfcoprepaidConfig</argument>
+        </arguments>
+    </virtualType>
+
+    <type name="Sofinco\Epayment\Gateway\Http\Client\ClientMock">
+        <arguments>
+            <argument name="logger" xsi:type="object">SfcoprepaidLogger</argument>
+        </arguments>
+    </type>
+
+    <!-- Commands infrastructure -->
+    <virtualType name="SfcoprepaidCommandPool" type="Magento\Payment\Gateway\Command\CommandPool">
+        <arguments>
+            <argument name="commands" xsi:type="array">
+                <item name="authorize" xsi:type="string">SfcoprepaidAuthorizeCommand</item>
+                <item name="capture" xsi:type="string">SfcoprepaidCaptureCommand</item>
+                <item name="void" xsi:type="string">SfcoprepaidVoidCommand</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Authorize command -->
+    <virtualType name="SfcoprepaidAuthorizeCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
+        <arguments>
+            <argument name="requestBuilder" xsi:type="object">SfcoprepaidAuthorizationRequest</argument>
+            <argument name="handler" xsi:type="object">SfcoprepaidResponseHandlerComposite</argument>
+            <argument name="transferFactory" xsi:type="object">Sofinco\Epayment\Gateway\Http\TransferFactory</argument>
+            <argument name="client" xsi:type="object">Sofinco\Epayment\Gateway\Http\Client\ClientMock</argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Authorization Request -->
+    <virtualType name="SfcoprepaidAuthorizationRequest" type="Magento\Payment\Gateway\Request\BuilderComposite">
+        <arguments>
+            <argument name="builders" xsi:type="array">
+                <item name="transaction" xsi:type="string">Sofinco\Epayment\Gateway\Request\AuthorizationRequest</item>
+                <item name="mockData" xsi:type="string">Sofinco\Epayment\Gateway\Request\MockDataRequest</item>
+            </argument>
+        </arguments>
+    </virtualType>
+    <type name="Sofinco\Epayment\Gateway\Request\AuthorizationRequest">
+        <arguments>
+            <argument name="config" xsi:type="object">SfcoprepaidConfig</argument>
+        </arguments>
+    </type>
+
+    <!-- Capture command -->
+    <virtualType name="SfcoprepaidCaptureCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
+        <arguments>
+            <argument name="requestBuilder" xsi:type="object">Sofinco\Epayment\Gateway\Request\CaptureRequest</argument>
+            <argument name="handler" xsi:type="object">Sofinco\Epayment\Gateway\Response\TxnIdHandler</argument>
+            <argument name="transferFactory" xsi:type="object">Sofinco\Epayment\Gateway\Http\TransferFactory</argument>
+            <argument name="validator" xsi:type="object">Sofinco\Epayment\Gateway\Validator\ResponseCodeValidator</argument>
+            <argument name="client" xsi:type="object">Sofinco\Epayment\Gateway\Http\Client\ClientMock</argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Capture Request -->
+    <type name="Sofinco\Epayment\Gateway\Request\CaptureRequest">
+        <arguments>
+            <argument name="config" xsi:type="object">SfcoprepaidConfig</argument>
+        </arguments>
+    </type>
+
+    <!-- Void command -->
+    <virtualType name="SfcoprepaidVoidCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
+        <arguments>
+            <argument name="requestBuilder" xsi:type="object">Sofinco\Epayment\Gateway\Request\VoidRequest</argument>
+            <argument name="handler" xsi:type="object">Sofinco\Epayment\Gateway\Response\TxnIdHandler</argument>
+            <argument name="transferFactory" xsi:type="object">Sofinco\Epayment\Gateway\Http\TransferFactory</argument>
+            <argument name="validator" xsi:type="object">Sofinco\Epayment\Gateway\Validator\ResponseCodeValidator</argument>
+            <argument name="client" xsi:type="object">Sofinco\Epayment\Gateway\Http\Client\ClientMock</argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Void Request -->
+    <type name="Sofinco\Epayment\Gateway\Request\VoidRequest">
+        <arguments>
+            <argument name="config" xsi:type="object">SfcoprepaidConfig</argument>
+        </arguments>
+    </type>
+
+    <!-- Response handlers -->
+    <virtualType name="SfcoprepaidResponseHandlerComposite" type="Magento\Payment\Gateway\Response\HandlerChain">
+        <arguments>
+            <argument name="handlers" xsi:type="array">
+                <item name="txnid" xsi:type="string">Sofinco\Epayment\Gateway\Response\TxnIdHandler</item>
+                <item name="fraud" xsi:type="string">Sofinco\Epayment\Gateway\Response\FraudHandler</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Value handlers infrastructure -->
+    <virtualType name="SfcoprepaidValueHandlerPool" type="Magento\Payment\Gateway\Config\ValueHandlerPool">
+        <arguments>
+            <argument name="handlers" xsi:type="array">
+                <item name="default" xsi:type="string">SfcoprepaidConfigValueHandler</item>
+            </argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="SfcoprepaidConfigValueHandler" type="Magento\Payment\Gateway\Config\ConfigValueHandler">
+        <arguments>
+            <argument name="configInterface" xsi:type="object">SfcoprepaidConfig</argument>
+        </arguments>
+    </virtualType>
+
+    <type name="Sofinco\Epayment\Block\Info">
+        <arguments>
+            <argument name="config" xsi:type="object">SfcoprepaidConfig</argument>
+        </arguments>
+    </type>
+    <!-- ! SFCO_PREPAID -->
+
+    <!-- SFCO_PAYBUTTONS -->
+    <!-- Payment Method Facade configuration -->
+    <virtualType name="SfcopaybuttonsFacade" type="Magento\Payment\Model\Method\Adapter">
+        <arguments>
+            <argument name="code" xsi:type="const">\Sofinco\Epayment\Model\Ui\SfcopaybuttonsConfigProvider::CODE</argument>
+            <argument name="formBlockType" xsi:type="string">Sofinco\Epayment\Block\Checkout\Payment</argument>
+            <argument name="infoBlockType" xsi:type="string">Sofinco\Epayment\Block\Info</argument>
+            <argument name="valueHandlerPool" xsi:type="object">SfcopaybuttonsValueHandlerPool</argument>
+            <argument name="commandPool" xsi:type="object">SfcopaybuttonsCommandPool</argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Configuration reader -->
+    <virtualType name="SfcopaybuttonsConfig" type="Magento\Payment\Gateway\Config\Config">
+        <arguments>
+            <argument name="methodCode" xsi:type="const">\Sofinco\Epayment\Model\Ui\SfcopaybuttonsConfigProvider::CODE</argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Logger, initialized with SfcopaybuttonsConfig -->
+    <virtualType name="SfcopaybuttonsLogger" type="Magento\Payment\Model\Method\Logger">
+        <arguments>
+            <argument name="config" xsi:type="object">SfcopaybuttonsConfig</argument>
+        </arguments>
+    </virtualType>
+
+    <type name="Sofinco\Epayment\Gateway\Http\Client\ClientMock">
+        <arguments>
+            <argument name="logger" xsi:type="object">SfcopaybuttonsLogger</argument>
+        </arguments>
+    </type>
+
+    <!-- Commands infrastructure -->
+    <virtualType name="SfcopaybuttonsCommandPool" type="Magento\Payment\Gateway\Command\CommandPool">
+        <arguments>
+            <argument name="commands" xsi:type="array">
+                <item name="authorize" xsi:type="string">SfcopaybuttonsAuthorizeCommand</item>
+                <item name="capture" xsi:type="string">SfcopaybuttonsCaptureCommand</item>
+                <item name="void" xsi:type="string">SfcopaybuttonsVoidCommand</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Authorize command -->
+    <virtualType name="SfcopaybuttonsAuthorizeCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
+        <arguments>
+            <argument name="requestBuilder" xsi:type="object">SfcopaybuttonsAuthorizationRequest</argument>
+            <argument name="handler" xsi:type="object">SfcopaybuttonsResponseHandlerComposite</argument>
+            <argument name="transferFactory" xsi:type="object">Sofinco\Epayment\Gateway\Http\TransferFactory</argument>
+            <argument name="client" xsi:type="object">Sofinco\Epayment\Gateway\Http\Client\ClientMock</argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Authorization Request -->
+    <virtualType name="SfcopaybuttonsAuthorizationRequest" type="Magento\Payment\Gateway\Request\BuilderComposite">
+        <arguments>
+            <argument name="builders" xsi:type="array">
+                <item name="transaction" xsi:type="string">Sofinco\Epayment\Gateway\Request\AuthorizationRequest</item>
+                <item name="mockData" xsi:type="string">Sofinco\Epayment\Gateway\Request\MockDataRequest</item>
+            </argument>
+        </arguments>
+    </virtualType>
+    <type name="Sofinco\Epayment\Gateway\Request\AuthorizationRequest">
+        <arguments>
+            <argument name="config" xsi:type="object">SfcopaybuttonsConfig</argument>
+        </arguments>
+    </type>
+
+    <!-- Capture command -->
+    <virtualType name="SfcopaybuttonsCaptureCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
+        <arguments>
+            <argument name="requestBuilder" xsi:type="object">Sofinco\Epayment\Gateway\Request\CaptureRequest</argument>
+            <argument name="handler" xsi:type="object">Sofinco\Epayment\Gateway\Response\TxnIdHandler</argument>
+            <argument name="transferFactory" xsi:type="object">Sofinco\Epayment\Gateway\Http\TransferFactory</argument>
+            <argument name="validator" xsi:type="object">Sofinco\Epayment\Gateway\Validator\ResponseCodeValidator</argument>
+            <argument name="client" xsi:type="object">Sofinco\Epayment\Gateway\Http\Client\ClientMock</argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Capture Request -->
+    <type name="Sofinco\Epayment\Gateway\Request\CaptureRequest">
+        <arguments>
+            <argument name="config" xsi:type="object">SfcopaybuttonsConfig</argument>
+        </arguments>
+    </type>
+
+    <!-- Void command -->
+    <virtualType name="SfcopaybuttonsVoidCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
+        <arguments>
+            <argument name="requestBuilder" xsi:type="object">Sofinco\Epayment\Gateway\Request\VoidRequest</argument>
+            <argument name="handler" xsi:type="object">Sofinco\Epayment\Gateway\Response\TxnIdHandler</argument>
+            <argument name="transferFactory" xsi:type="object">Sofinco\Epayment\Gateway\Http\TransferFactory</argument>
+            <argument name="validator" xsi:type="object">Sofinco\Epayment\Gateway\Validator\ResponseCodeValidator</argument>
+            <argument name="client" xsi:type="object">Sofinco\Epayment\Gateway\Http\Client\ClientMock</argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Void Request -->
+    <type name="Sofinco\Epayment\Gateway\Request\VoidRequest">
+        <arguments>
+            <argument name="config" xsi:type="object">SfcopaybuttonsConfig</argument>
+        </arguments>
+    </type>
+
+    <!-- Response handlers -->
+    <virtualType name="SfcopaybuttonsResponseHandlerComposite" type="Magento\Payment\Gateway\Response\HandlerChain">
+        <arguments>
+            <argument name="handlers" xsi:type="array">
+                <item name="txnid" xsi:type="string">Sofinco\Epayment\Gateway\Response\TxnIdHandler</item>
+                <item name="fraud" xsi:type="string">Sofinco\Epayment\Gateway\Response\FraudHandler</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Value handlers infrastructure -->
+    <virtualType name="SfcopaybuttonsValueHandlerPool" type="Magento\Payment\Gateway\Config\ValueHandlerPool">
+        <arguments>
+            <argument name="handlers" xsi:type="array">
+                <item name="default" xsi:type="string">SfcopaybuttonsConfigValueHandler</item>
+            </argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="SfcopaybuttonsConfigValueHandler" type="Magento\Payment\Gateway\Config\ConfigValueHandler">
+        <arguments>
+            <argument name="configInterface" xsi:type="object">SfcopaybuttonsConfig</argument>
+        </arguments>
+    </virtualType>
+
+    <type name="Sofinco\Epayment\Block\Info">
+        <arguments>
+            <argument name="config" xsi:type="object">SfcopaybuttonsConfig</argument>
+        </arguments>
+    </type>
+    <!-- ! SFCO_PAYBUTTONS -->
+
+    <!-- SFCO_PRIVATE -->
+    <!-- Payment Method Facade configuration -->
+    <virtualType name="SfcoprivateFacade" type="Magento\Payment\Model\Method\Adapter">
+        <arguments>
+            <argument name="code" xsi:type="const">\Sofinco\Epayment\Model\Ui\SfcoprivateConfigProvider::CODE</argument>
+            <argument name="formBlockType" xsi:type="string">Sofinco\Epayment\Block\Checkout\Payment</argument>
+            <argument name="infoBlockType" xsi:type="string">Sofinco\Epayment\Block\Info</argument>
+            <argument name="valueHandlerPool" xsi:type="object">SfcoprivateValueHandlerPool</argument>
+            <argument name="commandPool" xsi:type="object">SfcoprivateCommandPool</argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Configuration reader -->
+    <virtualType name="SfcoprivateConfig" type="Magento\Payment\Gateway\Config\Config">
+        <arguments>
+            <argument name="methodCode" xsi:type="const">\Sofinco\Epayment\Model\Ui\SfcoprivateConfigProvider::CODE</argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Logger, initialized with SfcoprivateConfig -->
+    <virtualType name="SfcoprivateLogger" type="Magento\Payment\Model\Method\Logger">
+        <arguments>
+            <argument name="config" xsi:type="object">SfcoprivateConfig</argument>
+        </arguments>
+    </virtualType>
+
+    <type name="Sofinco\Epayment\Gateway\Http\Client\ClientMock">
+        <arguments>
+            <argument name="logger" xsi:type="object">SfcoprivateLogger</argument>
+        </arguments>
+    </type>
+
+    <!-- Commands infrastructure -->
+    <virtualType name="SfcoprivateCommandPool" type="Magento\Payment\Gateway\Command\CommandPool">
+        <arguments>
+            <argument name="commands" xsi:type="array">
+                <item name="authorize" xsi:type="string">SfcoprivateAuthorizeCommand</item>
+                <item name="capture" xsi:type="string">SfcoprivateCaptureCommand</item>
+                <item name="void" xsi:type="string">SfcoprivateVoidCommand</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Authorize command -->
+    <virtualType name="SfcoprivateAuthorizeCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
+        <arguments>
+            <argument name="requestBuilder" xsi:type="object">SfcoprivateAuthorizationRequest</argument>
+            <argument name="handler" xsi:type="object">SfcoprivateResponseHandlerComposite</argument>
+            <argument name="transferFactory" xsi:type="object">Sofinco\Epayment\Gateway\Http\TransferFactory</argument>
+            <argument name="client" xsi:type="object">Sofinco\Epayment\Gateway\Http\Client\ClientMock</argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Authorization Request -->
+    <virtualType name="SfcoprivateAuthorizationRequest" type="Magento\Payment\Gateway\Request\BuilderComposite">
+        <arguments>
+            <argument name="builders" xsi:type="array">
+                <item name="transaction" xsi:type="string">Sofinco\Epayment\Gateway\Request\AuthorizationRequest</item>
+                <item name="mockData" xsi:type="string">Sofinco\Epayment\Gateway\Request\MockDataRequest</item>
+            </argument>
+        </arguments>
+    </virtualType>
+    <type name="Sofinco\Epayment\Gateway\Request\AuthorizationRequest">
+        <arguments>
+            <argument name="config" xsi:type="object">SfcoprivateConfig</argument>
+        </arguments>
+    </type>
+
+    <!-- Capture command -->
+    <virtualType name="SfcoprivateCaptureCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
+        <arguments>
+            <argument name="requestBuilder" xsi:type="object">Sofinco\Epayment\Gateway\Request\CaptureRequest</argument>
+            <argument name="handler" xsi:type="object">Sofinco\Epayment\Gateway\Response\TxnIdHandler</argument>
+            <argument name="transferFactory" xsi:type="object">Sofinco\Epayment\Gateway\Http\TransferFactory</argument>
+            <argument name="validator" xsi:type="object">Sofinco\Epayment\Gateway\Validator\ResponseCodeValidator</argument>
+            <argument name="client" xsi:type="object">Sofinco\Epayment\Gateway\Http\Client\ClientMock</argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Capture Request -->
+    <type name="Sofinco\Epayment\Gateway\Request\CaptureRequest">
+        <arguments>
+            <argument name="config" xsi:type="object">SfcoprivateConfig</argument>
+        </arguments>
+    </type>
+
+    <!-- Void command -->
+    <virtualType name="SfcoprivateVoidCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
+        <arguments>
+            <argument name="requestBuilder" xsi:type="object">Sofinco\Epayment\Gateway\Request\VoidRequest</argument>
+            <argument name="handler" xsi:type="object">Sofinco\Epayment\Gateway\Response\TxnIdHandler</argument>
+            <argument name="transferFactory" xsi:type="object">Sofinco\Epayment\Gateway\Http\TransferFactory</argument>
+            <argument name="validator" xsi:type="object">Sofinco\Epayment\Gateway\Validator\ResponseCodeValidator</argument>
+            <argument name="client" xsi:type="object">Sofinco\Epayment\Gateway\Http\Client\ClientMock</argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Void Request -->
+    <type name="Sofinco\Epayment\Gateway\Request\VoidRequest">
+        <arguments>
+            <argument name="config" xsi:type="object">SfcoprivateConfig</argument>
+        </arguments>
+    </type>
+
+    <!-- Response handlers -->
+    <virtualType name="SfcoprivateResponseHandlerComposite" type="Magento\Payment\Gateway\Response\HandlerChain">
+        <arguments>
+            <argument name="handlers" xsi:type="array">
+                <item name="txnid" xsi:type="string">Sofinco\Epayment\Gateway\Response\TxnIdHandler</item>
+                <item name="fraud" xsi:type="string">Sofinco\Epayment\Gateway\Response\FraudHandler</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Value handlers infrastructure -->
+    <virtualType name="SfcoprivateValueHandlerPool" type="Magento\Payment\Gateway\Config\ValueHandlerPool">
+        <arguments>
+            <argument name="handlers" xsi:type="array">
+                <item name="default" xsi:type="string">SfcoprivateConfigValueHandler</item>
+            </argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="SfcoprivateConfigValueHandler" type="Magento\Payment\Gateway\Config\ConfigValueHandler">
+        <arguments>
+            <argument name="configInterface" xsi:type="object">SfcoprivateConfig</argument>
+        </arguments>
+    </virtualType>
+
+    <type name="Sofinco\Epayment\Block\Info">
+        <arguments>
+            <argument name="config" xsi:type="object">SfcoprivateConfig</argument>
+        </arguments>
+    </type>
+    <!-- ! SFCO_PRIVATE -->
+
+    <!-- SFCO_FINANCIAL -->
+    <!-- Payment Method Facade configuration -->
+    <virtualType name="SfcofinancialFacade" type="Magento\Payment\Model\Method\Adapter">
+        <arguments>
+            <argument name="code" xsi:type="const">\Sofinco\Epayment\Model\Ui\SfcofinancialConfigProvider::CODE</argument>
+            <argument name="formBlockType" xsi:type="string">Sofinco\Epayment\Block\Checkout\Payment</argument>
+            <argument name="infoBlockType" xsi:type="string">Sofinco\Epayment\Block\Info</argument>
+            <argument name="valueHandlerPool" xsi:type="object">SfcofinancialValueHandlerPool</argument>
+            <argument name="commandPool" xsi:type="object">SfcofinancialCommandPool</argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Configuration reader -->
+    <virtualType name="SfcofinancialConfig" type="Magento\Payment\Gateway\Config\Config">
+        <arguments>
+            <argument name="methodCode" xsi:type="const">\Sofinco\Epayment\Model\Ui\SfcofinancialConfigProvider::CODE</argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Logger, initialized with SfcofinancialConfig -->
+    <virtualType name="SfcofinancialLogger" type="Magento\Payment\Model\Method\Logger">
+        <arguments>
+            <argument name="config" xsi:type="object">SfcofinancialConfig</argument>
+        </arguments>
+    </virtualType>
+
+    <type name="Sofinco\Epayment\Gateway\Http\Client\ClientMock">
+        <arguments>
+            <argument name="logger" xsi:type="object">SfcofinancialLogger</argument>
+        </arguments>
+    </type>
+
+    <!-- Commands infrastructure -->
+    <virtualType name="SfcofinancialCommandPool" type="Magento\Payment\Gateway\Command\CommandPool">
+        <arguments>
+            <argument name="commands" xsi:type="array">
+                <item name="authorize" xsi:type="string">SfcofinancialAuthorizeCommand</item>
+                <item name="capture" xsi:type="string">SfcofinancialCaptureCommand</item>
+                <item name="void" xsi:type="string">SfcofinancialVoidCommand</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Authorize command -->
+    <virtualType name="SfcofinancialAuthorizeCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
+        <arguments>
+            <argument name="requestBuilder" xsi:type="object">SfcofinancialAuthorizationRequest</argument>
+            <argument name="handler" xsi:type="object">SfcofinancialResponseHandlerComposite</argument>
+            <argument name="transferFactory" xsi:type="object">Sofinco\Epayment\Gateway\Http\TransferFactory</argument>
+            <argument name="client" xsi:type="object">Sofinco\Epayment\Gateway\Http\Client\ClientMock</argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Authorization Request -->
+    <virtualType name="SfcofinancialAuthorizationRequest" type="Magento\Payment\Gateway\Request\BuilderComposite">
+        <arguments>
+            <argument name="builders" xsi:type="array">
+                <item name="transaction" xsi:type="string">Sofinco\Epayment\Gateway\Request\AuthorizationRequest</item>
+                <item name="mockData" xsi:type="string">Sofinco\Epayment\Gateway\Request\MockDataRequest</item>
+            </argument>
+        </arguments>
+    </virtualType>
+    <type name="Sofinco\Epayment\Gateway\Request\AuthorizationRequest">
+        <arguments>
+            <argument name="config" xsi:type="object">SfcofinancialConfig</argument>
+        </arguments>
+    </type>
+
+    <!-- Capture command -->
+    <virtualType name="SfcofinancialCaptureCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
+        <arguments>
+            <argument name="requestBuilder" xsi:type="object">Sofinco\Epayment\Gateway\Request\CaptureRequest</argument>
+            <argument name="handler" xsi:type="object">Sofinco\Epayment\Gateway\Response\TxnIdHandler</argument>
+            <argument name="transferFactory" xsi:type="object">Sofinco\Epayment\Gateway\Http\TransferFactory</argument>
+            <argument name="validator" xsi:type="object">Sofinco\Epayment\Gateway\Validator\ResponseCodeValidator</argument>
+            <argument name="client" xsi:type="object">Sofinco\Epayment\Gateway\Http\Client\ClientMock</argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Capture Request -->
+    <type name="Sofinco\Epayment\Gateway\Request\CaptureRequest">
+        <arguments>
+            <argument name="config" xsi:type="object">SfcofinancialConfig</argument>
+        </arguments>
+    </type>
+
+    <!-- Void command -->
+    <virtualType name="SfcofinancialVoidCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
+        <arguments>
+            <argument name="requestBuilder" xsi:type="object">Sofinco\Epayment\Gateway\Request\VoidRequest</argument>
+            <argument name="handler" xsi:type="object">Sofinco\Epayment\Gateway\Response\TxnIdHandler</argument>
+            <argument name="transferFactory" xsi:type="object">Sofinco\Epayment\Gateway\Http\TransferFactory</argument>
+            <argument name="validator" xsi:type="object">Sofinco\Epayment\Gateway\Validator\ResponseCodeValidator</argument>
+            <argument name="client" xsi:type="object">Sofinco\Epayment\Gateway\Http\Client\ClientMock</argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Void Request -->
+    <type name="Sofinco\Epayment\Gateway\Request\VoidRequest">
+        <arguments>
+            <argument name="config" xsi:type="object">SfcofinancialConfig</argument>
+        </arguments>
+    </type>
+
+    <!-- Response handlers -->
+    <virtualType name="SfcofinancialResponseHandlerComposite" type="Magento\Payment\Gateway\Response\HandlerChain">
+        <arguments>
+            <argument name="handlers" xsi:type="array">
+                <item name="txnid" xsi:type="string">Sofinco\Epayment\Gateway\Response\TxnIdHandler</item>
+                <item name="fraud" xsi:type="string">Sofinco\Epayment\Gateway\Response\FraudHandler</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Value handlers infrastructure -->
+    <virtualType name="SfcofinancialValueHandlerPool" type="Magento\Payment\Gateway\Config\ValueHandlerPool">
+        <arguments>
+            <argument name="handlers" xsi:type="array">
+                <item name="default" xsi:type="string">SfcofinancialConfigValueHandler</item>
+            </argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="SfcofinancialConfigValueHandler" type="Magento\Payment\Gateway\Config\ConfigValueHandler">
+        <arguments>
+            <argument name="configInterface" xsi:type="object">SfcofinancialConfig</argument>
+        </arguments>
+    </virtualType>
+
+    <type name="Sofinco\Epayment\Block\Info">
+        <arguments>
+            <argument name="config" xsi:type="object">SfcofinancialConfig</argument>
+        </arguments>
+    </type>
+    <!-- ! SFCO_FINANCIAL -->
+
+    <!-- SFCO_S3XCB -->
+    <!-- Payment Method Facade configuration -->
+    <virtualType name="Sfcos3xcbFacade" type="Magento\Payment\Model\Method\Adapter">
+        <arguments>
+            <argument name="code" xsi:type="const">\Sofinco\Epayment\Model\Ui\Sfcos3xcbConfigProvider::CODE</argument>
+            <argument name="formBlockType" xsi:type="string">Sofinco\Epayment\Block\Checkout\Payment</argument>
+            <argument name="infoBlockType" xsi:type="string">Sofinco\Epayment\Block\Info</argument>
+            <argument name="valueHandlerPool" xsi:type="object">Sfcos3xcbValueHandlerPool</argument>
+            <argument name="commandPool" xsi:type="object">Sfcos3xcbCommandPool</argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Configuration reader -->
+    <virtualType name="Sfcos3xcbConfig" type="Magento\Payment\Gateway\Config\Config">
+        <arguments>
+            <argument name="methodCode" xsi:type="const">\Sofinco\Epayment\Model\Ui\Sfcos3xcbConfigProvider::CODE</argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Logger, initialized with Sfcos3xcbConfig -->
+    <virtualType name="Sfcos3xcbLogger" type="Magento\Payment\Model\Method\Logger">
+        <arguments>
+            <argument name="config" xsi:type="object">Sfcos3xcbConfig</argument>
+        </arguments>
+    </virtualType>
+
+    <type name="Sofinco\Epayment\Gateway\Http\Client\ClientMock">
+        <arguments>
+            <argument name="logger" xsi:type="object">Sfcos3xcbLogger</argument>
+        </arguments>
+    </type>
+
+    <!-- Commands infrastructure -->
+    <virtualType name="Sfcos3xcbCommandPool" type="Magento\Payment\Gateway\Command\CommandPool">
+        <arguments>
+            <argument name="commands" xsi:type="array">
+                <item name="authorize" xsi:type="string">Sfcos3xcbAuthorizeCommand</item>
+                <item name="capture" xsi:type="string">Sfcos3xcbCaptureCommand</item>
+                <item name="void" xsi:type="string">Sfcos3xcbVoidCommand</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Authorize command -->
+    <virtualType name="Sfcos3xcbAuthorizeCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
+        <arguments>
+            <argument name="requestBuilder" xsi:type="object">Sfcos3xcbAuthorizationRequest</argument>
+            <argument name="handler" xsi:type="object">Sfcos3xcbResponseHandlerComposite</argument>
+            <argument name="transferFactory" xsi:type="object">Sofinco\Epayment\Gateway\Http\TransferFactory</argument>
+            <argument name="client" xsi:type="object">Sofinco\Epayment\Gateway\Http\Client\ClientMock</argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Authorization Request -->
+    <virtualType name="Sfcos3xcbAuthorizationRequest" type="Magento\Payment\Gateway\Request\BuilderComposite">
+        <arguments>
+            <argument name="builders" xsi:type="array">
+                <item name="transaction" xsi:type="string">Sofinco\Epayment\Gateway\Request\AuthorizationRequest</item>
+                <item name="mockData" xsi:type="string">Sofinco\Epayment\Gateway\Request\MockDataRequest</item>
+            </argument>
+        </arguments>
+    </virtualType>
+    <type name="Sofinco\Epayment\Gateway\Request\AuthorizationRequest">
+        <arguments>
+            <argument name="config" xsi:type="object">Sfcos3xcbConfig</argument>
+        </arguments>
+    </type>
+
+    <!-- Capture command -->
+    <virtualType name="Sfcos3xcbCaptureCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
+        <arguments>
+            <argument name="requestBuilder" xsi:type="object">Sofinco\Epayment\Gateway\Request\CaptureRequest</argument>
+            <argument name="handler" xsi:type="object">Sofinco\Epayment\Gateway\Response\TxnIdHandler</argument>
+            <argument name="transferFactory" xsi:type="object">Sofinco\Epayment\Gateway\Http\TransferFactory</argument>
+            <argument name="validator" xsi:type="object">Sofinco\Epayment\Gateway\Validator\ResponseCodeValidator</argument>
+            <argument name="client" xsi:type="object">Sofinco\Epayment\Gateway\Http\Client\ClientMock</argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Capture Request -->
+    <type name="Sofinco\Epayment\Gateway\Request\CaptureRequest">
+        <arguments>
+            <argument name="config" xsi:type="object">Sfcos3xcbConfig</argument>
+        </arguments>
+    </type>
+
+    <!-- Void command -->
+    <virtualType name="Sfcos3xcbVoidCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
+        <arguments>
+            <argument name="requestBuilder" xsi:type="object">Sofinco\Epayment\Gateway\Request\VoidRequest</argument>
+            <argument name="handler" xsi:type="object">Sofinco\Epayment\Gateway\Response\TxnIdHandler</argument>
+            <argument name="transferFactory" xsi:type="object">Sofinco\Epayment\Gateway\Http\TransferFactory</argument>
+            <argument name="validator" xsi:type="object">Sofinco\Epayment\Gateway\Validator\ResponseCodeValidator</argument>
+            <argument name="client" xsi:type="object">Sofinco\Epayment\Gateway\Http\Client\ClientMock</argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Void Request -->
+    <type name="Sofinco\Epayment\Gateway\Request\VoidRequest">
+        <arguments>
+            <argument name="config" xsi:type="object">Sfcos3xcbConfig</argument>
+        </arguments>
+    </type>
+
+    <!-- Response handlers -->
+    <virtualType name="Sfcos3xcbResponseHandlerComposite" type="Magento\Payment\Gateway\Response\HandlerChain">
+        <arguments>
+            <argument name="handlers" xsi:type="array">
+                <item name="txnid" xsi:type="string">Sofinco\Epayment\Gateway\Response\TxnIdHandler</item>
+                <item name="fraud" xsi:type="string">Sofinco\Epayment\Gateway\Response\FraudHandler</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Value handlers infrastructure -->
+    <virtualType name="Sfcos3xcbValueHandlerPool" type="Magento\Payment\Gateway\Config\ValueHandlerPool">
+        <arguments>
+            <argument name="handlers" xsi:type="array">
+                <item name="default" xsi:type="string">Sfcos3xcbConfigValueHandler</item>
+            </argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="Sfcos3xcbConfigValueHandler" type="Magento\Payment\Gateway\Config\ConfigValueHandler">
+        <arguments>
+            <argument name="configInterface" xsi:type="object">Sfcos3xcbConfig</argument>
+        </arguments>
+    </virtualType>
+
+    <type name="Sofinco\Epayment\Block\Info">
+        <arguments>
+            <argument name="config" xsi:type="object">Sfcos3xcbConfig</argument>
+        </arguments>
+    </type>
+    <!-- ! SFCO_S3XCB -->
+
+</config>
