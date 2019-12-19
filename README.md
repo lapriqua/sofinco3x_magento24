@@ -1,4 +1,4 @@
-# Sofinco - Magento 2
+# Sofinco - Magento 2.3
 
 Extension Magento 2.3 pour la solution de paiement Sofinco
 
