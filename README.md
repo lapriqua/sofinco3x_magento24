@@ -1,6 +1,6 @@
 # Sofinco - Magento 2
 
-Extension Magento 2 pour la solution de paiement Sofinco
+Extension Magento 2.3 pour la solution de paiement Sofinco
 
 ## A propos
 
@@ -15,7 +15,7 @@ En une seule intégration, offrez plusieurs méthodes de paiement, bénéficiez 
 3. Exécuter la commande suivante pour la récupération des fichiers du module via Composer (un dossier `sofinco` sera créé dans le sous-dossier `vendor`). Vous aurez besoin de votre `Public key` comme identifiant et de votre `Private key` comme mot de passe :
 
     ```sh
-	composer require sofinco/epayment
+	composer require sofinco/epayment23
     ```
 
 4. Exécuter les commandes suivantes pour l'installation, l'activation et le déploiement du module :
