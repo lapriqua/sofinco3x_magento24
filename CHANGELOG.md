@@ -1,5 +1,16 @@
 # Change Log
 
+## [1.0.14] 2019-12-19
+
+### Bug Fixing
+- Compatibilité : corrections diverses (xml + urls) 
+
+## [1.0.13] 2019-11-28
+
+### Sofinco
+- First Sofinco release
+
+
 ## [1.0.12] 2019-03-07
 
 ### Magento 2.3
