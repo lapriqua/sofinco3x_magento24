@@ -50,7 +50,7 @@ class Config extends \Magento\Payment\Model\Config
     private $_urls = [
         'system' => [
             'test' => [
-                'https://itg3-tpeweb.paybox.fr/'
+                'https://preprod-tpeweb.paybox.com/php/'
             ],
             'production' => [
                 'https://tpeweb1.paybox.com/php/',
@@ -59,11 +59,11 @@ class Config extends \Magento\Payment\Model\Config
         ],
         'responsive' => [
             'test' => [
-                'https://preprod-tpeweb.paybox.com/cgi/FramepagepaiementRWD.cgi'
+                'https://preprod-tpeweb.paybox.com/php/'
             ],
             'production' => [
-                'https://tpeweb1.paybox.com/cgi/FramepagepaiementRWD.cgi',
-                'https://tpeweb.paybox.com/cgi/FramepagepaiementRWD.cgi',
+                'https://tpeweb1.paybox.com/php/',
+                'https://tpeweb.paybox.com/php/',
             ],
         ],
         'kwixo' => [
