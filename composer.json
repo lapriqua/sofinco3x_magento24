@@ -1,6 +1,6 @@
 {
   "name": "sofinco/epayment23",
-  "description": "Epayment payment module for Magento 2 ",
+  "description": "Epayment payment module for Magento 2.3",
   "type": "magento2-module",
   "version": "1.0.14",
   "license": [
