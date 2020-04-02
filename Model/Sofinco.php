@@ -659,8 +659,8 @@ class Sofinco
                 $address2 = $street[1];
             }
         }
-        $address1 = str_replace(".", " ", $address1);
-        $address2 = str_replace(".", " ", $address2);
+        $address1 = str_replace(".", " ", $this->removeAccents($address1));
+        $address2 = str_replace(".", " ", $this->removeAccents($address2));
         $zipCode = $address->getPostcode();
         $city = $this->removeAccents($address->getCity());
         $countryCode = $this->getCountryCode($address->getCountryId());
