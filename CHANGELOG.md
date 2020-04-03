@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.0.14] 2020-04-03
+
+### Bug Fixing
+- xml: suppression accents des adresses
+
 ## [1.0.14] 2019-12-19
 
 ### Bug Fixing
