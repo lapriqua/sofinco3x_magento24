@@ -14,7 +14,7 @@
  *
  * @version   1.0.16
  * @author    BM Services <contact@bm-services.com>
- * @copyright 2012-2017 Sofinco
+ * @copyright 2012-2021 Sofinco
  * @license   http://opensource.org/licenses/OSL-3.0
  * @link      http://www.paybox.com/
  */
