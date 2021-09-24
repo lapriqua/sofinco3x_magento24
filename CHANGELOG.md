@@ -1,5 +1,9 @@
 # Change Log
+## [1.0.16] 2021-09-24
 
+### Bug Fixing
+- Adding Country phone code for Reunion
+ 
 ## [1.0.15] 2020-04-03
 
 ### Bug Fixing
