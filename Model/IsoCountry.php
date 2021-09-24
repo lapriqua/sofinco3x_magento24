@@ -448,6 +448,7 @@ class IsoCountry
 		'PW'=>array('name'=>'PALAU','code'=>'680'),
 		'PY'=>array('name'=>'PARAGUAY','code'=>'595'),
 		'QA'=>array('name'=>'QATAR','code'=>'974'),
+		'RE'=>array('name'=>'REUNION','code'=>'262'),
 		'RO'=>array('name'=>'ROMANIA','code'=>'40'),
 		'RS'=>array('name'=>'SERBIA','code'=>'381'),
 		'RU'=>array('name'=>'RUSSIAN FEDERATION','code'=>'7'),
