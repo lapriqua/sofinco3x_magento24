@@ -24,25 +24,21 @@ $values = $this->getFormFields();
 try {
     if ($values['PBX_TYPEPAIEMENT'] == 'KWIXO') {
         $url = $this->escapeUrl($this->getKwixoUrl());
-    }
-    else if ($this->helper('Sofinco\Epayment\Helper\Mobile')->isMobile()) {
+    } elseif ($this->helper('Sofinco\Epayment\Helper\Mobile')->isMobile()) {
         $url = $this->escapeUrl($this->getMobileUrl());
-    }
-    else {
-        if(isset($values['PBX_SOURCE'])){
-            if($values['PBX_SOURCE'] == 'RWD'){
+    } else {
+        if (isset($values['PBX_SOURCE'])) {
+            if ($values['PBX_SOURCE'] == 'RWD') {
                 $url = $this->escapeUrl($this->getResponsiveUrl());
-            }else{
+            } else {
                 $url = $this->escapeUrl($this->getSystemUrl());
             }
-        }
-        else{
+        } else {
             $url = $this->escapeUrl($this->getSystemUrl());
         }
     }
     $type = $this->escapeUrl($this->getInputType());
-}
-catch (\Exception $e) {
+} catch (\Exception $e) {
     $error = $e;
 }
 

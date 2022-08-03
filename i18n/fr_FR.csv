@@ -175,3 +175,8 @@
 
 "You notified customer about invoice #%1.","Le client a été notifié de la création de la facture #%1."
 "Captured amount of %1 online.","Montant capturé de %1 en ligne."
+
+"Min order amount","Montant de commande minimum"
+"Max order amount","Montant de commande maximum"
+"Fee management - Share the fees with the customer","Gestion des frais - Partage des frais client / commerçant"
+"Fee management - I pay the fees (no cost for the customer)","Gestion des frais - Je prends en charge les frais"

@@ -23,10 +23,10 @@ namespace Sofinco\Epayment\Model\Admin\Order\Status;
 
 class Mode extends \Sofinco\Epayment\Model\Admin\Order\Status
 {
-    //	protected $_stateStatuses = array(
-    //		\Magento\Sales\Model\Order::STATE_NEW,
-    //		\Magento\Sales\Model\Order::STATE_PENDING_PAYMENT,
-    //	);
+    // protected $_stateStatuses = array(
+    //     \Magento\Sales\Model\Order::STATE_NEW,
+    //     \Magento\Sales\Model\Order::STATE_PENDING_PAYMENT,
+    // );
 
     public function toOptionArray()
     {
@@ -35,10 +35,10 @@ class Mode extends \Sofinco\Epayment\Model\Admin\Order\Status
             'value' => 'manual',
             'label' => __('Manual capture only'),
         ];
-        //    	$options[1] = array(
-        //    		'value' => 'state',
-        //    		'label' => __('On order state change'),
-        //    	);
+        // $options[1] = array(
+        //     'value' => 'state',
+        //     'label' => __('On order state change'),
+        // );
         $options[2] = [
             'value' => 'shipment',
             'label' => __('On order shipment'),

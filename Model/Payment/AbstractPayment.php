@@ -361,6 +361,9 @@ abstract class AbstractPayment extends AbstractMethod
         $data = $sofinco->directCapture($amount, $order, $txn);
         $this->logDebug(sprintf('Order %s: Capture - response code %s', $order->getIncrementId(), $data['CODEREPONSE']));
 
+        // Fix possible invalid utf-8 chars
+        $data = array_map('utf8_decode', $data);
+
         // Message
         if ($data['CODEREPONSE'] == '00000') {
             $message = 'Payment was captured by Sofinco.';
@@ -380,8 +383,8 @@ abstract class AbstractPayment extends AbstractMethod
             $data,
             $close,
             [
-            self::CALL_NUMBER => $data['NUMTRANS'],
-            self::TRANSACTION_NUMBER => $data['NUMAPPEL'],
+            self::CALL_NUMBER => $data['NUMAPPEL'],
+            self::TRANSACTION_NUMBER => $data['NUMTRANS'],
             ],
             $txn
         );
@@ -521,7 +524,7 @@ abstract class AbstractPayment extends AbstractMethod
                 && ($config->getSubscription() != \Sofinco\Epayment\Model\Config::SUBSCRIPTION_OFFER3))
                 || !$this->getAllowManualDebit()
                     ) {
-                        return self::PBXACTION_IMMEDIATE;
+                    return self::PBXACTION_IMMEDIATE;
                 }
                 break;
             default:
@@ -652,12 +655,10 @@ abstract class AbstractPayment extends AbstractMethod
         $invoice->register();
         $invoice->pay();
 
-        //        var_dump('makeCapture');
-        //        die();
-        //        $transactionSave = $this->_objectManager->get('Magento\Framework\Model\ResourceModel\Db\TransactionManager')
-        //                ->addObject($invoice)
-        //                ->addObject($order);
-        //        $transactionSave->save();
+        // $transactionSave = $this->_objectManager->get('Magento\Framework\Model\ResourceModel\Db\TransactionManager')
+        //         ->addObject($invoice)
+        //         ->addObject($order);
+        // $transactionSave->save();
 
         return true;
     }
@@ -695,6 +696,9 @@ abstract class AbstractPayment extends AbstractMethod
         // Call Sofinco Direct
         $connector = $this->getSofinco();
         $data = $connector->directRefund((float) $amount, $order, $txn);
+
+        // Fix possible invalid utf-8 chars
+        $data = array_map('utf8_decode', $data);
 
         // Message
         if ($data['CODEREPONSE'] == '00000') {
@@ -738,10 +742,12 @@ abstract class AbstractPayment extends AbstractMethod
             $cctype = $paymentInfo->getCcType();
 
             if (empty($cctype)) {
-                $ccType = $paymentInfo->getAdditionalInformation('cc_type');
+                $cctype = $paymentInfo->getAdditionalInformation('cc_type');
+                // If the cc_type wasn't provided, we might be in the XHR request made after a new payment method
+                // selection, which does not provide the field. We can continue, the field will be validated when
+                // using the place order button.
                 if (empty($cctype)) {
-                    $errorMsg = 'Please select a valid credit card type';
-                    throw new \LogicException(__($errorMsg));
+                    return $this;
                 }
             }
 
@@ -863,7 +869,7 @@ abstract class AbstractPayment extends AbstractMethod
         $message = 'An unexpected error have occured while processing Sofinco payment (%s).';
         $error = is_null($e) ? 'unknown error' : $e->getMessage();
         $error = __($error);
-        $message = $this->__($message, $error);
+        $message = __($message, $error);
         $data['status'] = $message;
         $status = $order->addStatusHistoryComment($message);
         $status->save();

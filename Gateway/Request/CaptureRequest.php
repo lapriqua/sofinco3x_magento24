@@ -137,6 +137,9 @@ class CaptureRequest implements BuilderInterface
         $data = $sofinco->directCapture($amount, $order, $txn);
         $this->logDebug(sprintf('Order %s: Capture - response code %s', $order->getIncrementId(), $data['CODEREPONSE']));
 
+        // Fix possible invalid utf-8 chars
+        $data = array_map('utf8_decode', $data);
+
         // Message
         if ($data['CODEREPONSE'] == '00000') {
             $message = 'Payment was captured by Sofinco.';
@@ -156,8 +159,8 @@ class CaptureRequest implements BuilderInterface
             $data,
             $close,
             [
-                self::CALL_NUMBER => $data['NUMTRANS'],
-                self::TRANSACTION_NUMBER => $data['NUMAPPEL'],
+                self::CALL_NUMBER => $data['NUMAPPEL'],
+                self::TRANSACTION_NUMBER => $data['NUMTRANS'],
             ],
             $txn
         );

@@ -26,13 +26,14 @@
             <merchant>
                 <environment>TEST</environment>
                 <subscription>flexible</subscription>
-                <site>1666666</site>
-                <rank>16</rank>
-                <identifier>7546450</identifier>
+                <site>8888872</site>
+                <rank>073</rank>
+                <identifier>30773149</identifier>
                 <password backend_model="Magento\Config\Model\Config\Backend\Encrypted">1999888I</password>
+                <passwordplus backend_model="Magento\Config\Model\Config\Backend\Encrypted">1999888I</passwordplus>
                 <hmackey backend_model="Magento\Config\Model\Config\Backend\Encrypted">0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF</hmackey>
                 <hmacalgo>SHA512</hmacalgo>
-                <min_amount>150</min_amount>
+                <min_amount>90</min_amount>
                 <max_amount>2000</max_amount>
             </merchant>
             <languages>

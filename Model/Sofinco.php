@@ -292,15 +292,15 @@ class Sofinco
         $now = new \DateTime('now', new \DateTimeZone('Europe/Paris'));
         $fields = [
             'ACTIVITE' => '024',
-            'VERSION' => '00103',
-            'CLE' => $config->getPassword(),
+            'VERSION' => $version,
+            'CLE' => $password,
             'DATEQ' => $now->format('dmYHis'),
             'DEVISE' => sprintf('%03d', $this->getCurrency($order)),
             'IDENTIFIANT' => $config->getIdentifier(),
             'MONTANT' => sprintf('%010d', $amount),
-            'NUMAPPEL' => sprintf('%010d', $transNumber),
+            'NUMAPPEL' => sprintf('%010d', $callNumber),
             'NUMQUESTION' => sprintf('%010d', $now->format('U')),
-            'NUMTRANS' => sprintf('%010d', $callNumber),
+            'NUMTRANS' => sprintf('%010d', $transNumber),
             'RANG' => sprintf('%02d', $config->getRank()),
             'REFERENCE' => $this->tokenizeOrder($order),
             'SITE' => sprintf('%07d', $config->getSite()),
@@ -314,6 +314,15 @@ class Sofinco
                 $fields['ACQUEREUR'] = 'PAYPAL';
                 break;
         }
+
+        // Sort parameters
+        ksort($fields);
+
+        // Sign values
+        $sign = $this->signValues($fields);
+
+        // Hash HMAC
+        $fields['HMAC'] = $sign;
 
         $urls = $config->getDirectUrls();
         $url = $this->checkUrls($urls);
@@ -445,7 +454,8 @@ class Sofinco
         $lang = $languages[$lang];
         $values['PBX_LANGUE'] = $lang;
 
-        //Paypal Specicif
+        // PayPal specific code
+        /*
         if ($payment->getCode() == 'sfco_paypal') {
             $separator = '#';
             $address = $order->getBillingAddress();
@@ -474,6 +484,7 @@ class Sofinco
             $data_Paypal .= $this->cleanForPaypalData(implode('-', $products), 127);
             $values['PBX_PAYPAL_DATA'] = $this->cleanForPaypalData($data_Paypal, 490);
         }
+        */
 
         // Misc.
         $values['PBX_TIME'] = date('c');
@@ -627,24 +638,24 @@ class Sofinco
             $id = 1;
         }
         $simpleXMLElement = new SimpleXMLElement("<Customer/>");
-        $simpleXMLElement->addChild('Id',$id);
+        $simpleXMLElement->addChild('Id', $id);
         return trim(substr($simpleXMLElement->asXML(), 21));
     }
 
     public function getBillingInformation(Order $order)
     {
-         $address = $order->getBillingAddress();
-        if($order->getCustomerFirstname()!=""){
-			$firstName = $this->removeAccents($order->getCustomerFirstname());
-		}else{
-			$firstName = $this->removeAccents($address->getFirstname());
-		}
-        if($order->getCustomerLastname()!=""){
-			$lastName = $this->removeAccents($order->getCustomerLastname());
-        }else{
-			$lastName = $this->removeAccents($address->getLastname());
-		}
-		$title = $order->getCustomerGender();
+        $address = $order->getBillingAddress();
+        if ($order->getCustomerFirstname() != "") {
+            $firstName = $this->removeAccents($order->getCustomerFirstname());
+        } else {
+            $firstName = $this->removeAccents($address->getFirstname());
+        }
+        if ($order->getCustomerLastname() != "") {
+            $lastName = $this->removeAccents($order->getCustomerLastname());
+        } else {
+            $lastName = $this->removeAccents($address->getLastname());
+        }
+        $title = $order->getCustomerGender();
         if (empty($title)) {
             $title = "Mr";
         }
@@ -666,40 +677,41 @@ class Sofinco
         $countryCode = $this->getCountryCode($address->getCountryId());
         $countryName = $this->removeAccents($address->getCountryId());
         $countryCodeHomePhone = $this->getCountryPhoneCode($address->getCountryId());
-        $homePhone = substr($address->getTelephone(),-9);
+        $homePhone = substr($address->getTelephone(), -9);
         $countryCodeMobilePhone = $this->getCountryPhoneCode($address->getCountryId());
-        $mobilePhone = substr($address->getTelephone(),-9);
+        $mobilePhone = substr($address->getTelephone(), -9);
 
         $simpleXMLElement = new SimpleXMLElement("<Billing/>");
         // $billingXML = $simpleXMLElement->addChild('Billing');
         $addressXML = $simpleXMLElement->addChild('Address');
-        $addressXML->addChild('Title',$title);
-        $addressXML->addChild('FirstName',$firstName);
-        $addressXML->addChild('LastName',$lastName);
-        $addressXML->addChild('Address1',$address1);
-        $addressXML->addChild('Address2',$address2);
-        $addressXML->addChild('ZipCode',$zipCode);
-        $addressXML->addChild('City',$city);
-        $addressXML->addChild('CountryCode',$countryCode);
-        $addressXML->addChild('CountryName',$countryName);
-        $addressXML->addChild('CountryCodeHomePhone',$countryCodeHomePhone);
-        $addressXML->addChild('HomePhone',$homePhone);
-        $addressXML->addChild('CountryCodeMobilePhone',$countryCodeMobilePhone);
-        $addressXML->addChild('MobilePhone',$mobilePhone);
+        $addressXML->addChild('Title', $title);
+        $addressXML->addChild('FirstName', $firstName);
+        $addressXML->addChild('LastName', $lastName);
+        $addressXML->addChild('Address1', $address1);
+        $addressXML->addChild('Address2', $address2);
+        $addressXML->addChild('ZipCode', $zipCode);
+        $addressXML->addChild('City', $city);
+        $addressXML->addChild('CountryCode', $countryCode);
+        $addressXML->addChild('CountryName', $countryName);
+        $addressXML->addChild('CountryCodeHomePhone', $countryCodeHomePhone);
+        $addressXML->addChild('HomePhone', $homePhone);
+        $addressXML->addChild('CountryCodeMobilePhone', $countryCodeMobilePhone);
+        $addressXML->addChild('MobilePhone', $mobilePhone);
 
         return trim(substr($simpleXMLElement->asXML(), 21));
     }
 
-    private function removeAccents($string){
+    private function removeAccents($string)
+    {
         $table = array(
-        'Š'=>'S', 'š'=>'s', 'Đ'=>'Dj', 'đ'=>'dj', 'Ž'=>'Z', 'ž'=>'z', 'Č'=>'C', 'č'=>'c', 'Ć'=>'C', 'ć'=>'c',
-        'À'=>'A', 'Á'=>'A', 'Â'=>'A', 'Ã'=>'A', 'Ä'=>'A', 'Å'=>'A', 'Æ'=>'A', 'Ç'=>'C', 'È'=>'E', 'É'=>'E',
-        'Ê'=>'E', 'Ë'=>'E', 'Ì'=>'I', 'Í'=>'I', 'Î'=>'I', 'Ï'=>'I', 'Ñ'=>'N', 'Ò'=>'O', 'Ó'=>'O', 'Ô'=>'O',
-        'Õ'=>'O', 'Ö'=>'O', 'Ø'=>'O', 'Ù'=>'U', 'Ú'=>'U', 'Û'=>'U', 'Ü'=>'U', 'Ý'=>'Y', 'Þ'=>'B', 'ß'=>'Ss',
-        'à'=>'a', 'á'=>'a', 'â'=>'a', 'ã'=>'a', 'ä'=>'a', 'å'=>'a', 'æ'=>'a', 'ç'=>'c', 'è'=>'e', 'é'=>'e',
-        'ê'=>'e', 'ë'=>'e', 'ì'=>'i', 'í'=>'i', 'î'=>'i', 'ï'=>'i', 'ð'=>'o', 'ñ'=>'n', 'ò'=>'o', 'ó'=>'o',
-        'ô'=>'o', 'õ'=>'o', 'ö'=>'o', 'ø'=>'o', 'ù'=>'u', 'ú'=>'u', 'û'=>'u', 'ý'=>'y', 'ý'=>'y', 'þ'=>'b',
-        'ÿ'=>'y', 'Ŕ'=>'R', 'ŕ'=>'r',
+            'Š'=>'S', 'š'=>'s', 'Đ'=>'Dj', 'đ'=>'dj', 'Ž'=>'Z', 'ž'=>'z', 'Č'=>'C', 'č'=>'c', 'Ć'=>'C', 'ć'=>'c',
+            'À'=>'A', 'Á'=>'A', 'Â'=>'A', 'Ã'=>'A', 'Ä'=>'A', 'Å'=>'A', 'Æ'=>'A', 'Ç'=>'C', 'È'=>'E', 'É'=>'E',
+            'Ê'=>'E', 'Ë'=>'E', 'Ì'=>'I', 'Í'=>'I', 'Î'=>'I', 'Ï'=>'I', 'Ñ'=>'N', 'Ò'=>'O', 'Ó'=>'O', 'Ô'=>'O',
+            'Õ'=>'O', 'Ö'=>'O', 'Ø'=>'O', 'Ù'=>'U', 'Ú'=>'U', 'Û'=>'U', 'Ü'=>'U', 'Ý'=>'Y', 'Þ'=>'B', 'ß'=>'Ss',
+            'à'=>'a', 'á'=>'a', 'â'=>'a', 'ã'=>'a', 'ä'=>'a', 'å'=>'a', 'æ'=>'a', 'ç'=>'c', 'è'=>'e', 'é'=>'e',
+            'ê'=>'e', 'ë'=>'e', 'ì'=>'i', 'í'=>'i', 'î'=>'i', 'ï'=>'i', 'ð'=>'o', 'ñ'=>'n', 'ò'=>'o', 'ó'=>'o',
+            'ô'=>'o', 'õ'=>'o', 'ö'=>'o', 'ø'=>'o', 'ù'=>'u', 'ú'=>'u', 'û'=>'u', 'ý'=>'y', 'ý'=>'y', 'þ'=>'b',
+            'ÿ'=>'y', 'Ŕ'=>'R', 'ŕ'=>'r',
         );
 
         return strtr($string, $table);
@@ -712,7 +724,7 @@ class Sofinco
         return $countryMapper->getIsoCode($countryCode);
     }
 
-     public function getCountryPhoneCode($countryCode)
+    public function getCountryPhoneCode($countryCode)
     {
         $countryMapper = $this->_objectManager->get('Sofinco\Epayment\Model\IsoCountry');
 

@@ -25,7 +25,7 @@ class Country extends \Magento\Framework\App\Helper\AbstractHelper
 {
     protected $_objectManager = null;
 
-    private $countryCodes = 
+    private $countryCodes =
     '[
         {"iso_code":"AD","numeric_iso_code":"20"},
         {"iso_code":"AE","numeric_iso_code":"784"},
@@ -277,11 +277,10 @@ class Country extends \Magento\Framework\App\Helper\AbstractHelper
         {"iso_code":"ZM","numeric_iso_code":"894"},
         {"iso_code":"ZW","numeric_iso_code":"716"}
     ]';
-    
+
     public function __construct(
         \Magento\Framework\ObjectManagerInterface $objectManager
     ) {
         $this->_objectManager = $objectManager;
     }
-
 }

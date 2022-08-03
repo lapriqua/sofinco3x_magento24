@@ -50,8 +50,10 @@ class DataAssignObserver extends AbstractDataAssignObserver
 
         $cctype = $payment->getCcType();
         if (empty($cctype)) {
-            $errorMsg = 'Please select a valid credit card type';
-            throw new \LogicException(__($errorMsg));
+            // If the cc_type wasn't provided, we might be in the XHR request made after a new payment method
+            // selection, which does not provide the field. We can continue, the field will be validated when
+            // using the place order button.
+            return;
         }
 
         $objectManager = \Magento\Framework\App\ObjectManager::getInstance();

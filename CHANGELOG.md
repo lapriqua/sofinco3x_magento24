@@ -1,3 +1,8 @@
+
+# Change Log
+## [1.0.17] 2022-08-03
+Wording fixes and a few minor fixes
+
 # Change Log
 ## [1.0.16] 2021-09-24
 
