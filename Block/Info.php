@@ -67,6 +67,10 @@ class Info extends ConfigurableInfo
     {
         $result = [];
         $cards = $this->getMethod()->getCards();
+        if ($this->getMethod()->getConfigData('cctypes') == null) {
+            return $result;
+        }
+
         $selected = explode(',', $this->getMethod()->getConfigData('cctypes'));
         foreach ($cards as $code => $card) {
             if (in_array($code, $selected)) {
@@ -78,6 +82,10 @@ class Info extends ConfigurableInfo
 
     public function getSofincoData()
     {
+        if (empty($this->getInfo()->getSfcoAuthorization())) {
+            return [];
+        }
+
         return unserialize($this->getInfo()->getSfcoAuthorization());
     }
 

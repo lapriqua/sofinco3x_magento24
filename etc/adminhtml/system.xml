@@ -78,7 +78,7 @@
                 </field>
                 <field id="identifier" translate="label comment" type="text" sortOrder="30" showInDefault="1"
                        showInWebsite="1" showInStore="1">
-                    <label>Login</label>
+                    <label>Sofinco Login</label>
                     <comment><![CDATA[Internal login provided by Sofinco.]]></comment>
                     <validate>required-entry validate-digits validate-length maximum-length-9</validate>
                     <config_path>sfco/merchant/identifier</config_path>
@@ -130,12 +130,6 @@
                     <source_model>Sofinco\Epayment\Model\Config\Source\CurrencyYesNo</source_model>
                     <config_path>sfco/info/currency</config_path>
                 </field>
-                <field id="reponsive" translate="label comment" type="select" sortOrder="10" showInDefault="1"
-                       showInWebsite="1" showInStore="1">
-                    <label>Payment page type</label>
-                    <source_model>Sofinco\Epayment\Model\Config\Source\ResponsiveYesNo</source_model>
-                    <config_path>sfco/info/responsive</config_path>
-                </field>
                 <field id="min_amount" translate="label comment" type="text" sortOrder="10" showInDefault="1"
                        showInWebsite="1" showInStore="1">
                     <label>Min order amount</label>
@@ -173,4 +167,3 @@
         </section>
     </system>
 </config>
-

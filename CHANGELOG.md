@@ -1,14 +1,17 @@
-
 # Change Log
+## [1.0.18] 2023-02-08
+Update BackOffice settings
+Add PBX_SHOPPINGCART
+Fix Magento 2.4.5 & PHP 8 compatibility
+
 ## [1.0.17] 2022-08-03
 Wording fixes and a few minor fixes
 
-# Change Log
 ## [1.0.16] 2021-09-24
 
 ### Bug Fixing
 - Adding Country phone code for Reunion
- 
+
 ## [1.0.15] 2020-04-03
 
 ### Bug Fixing
@@ -17,7 +20,7 @@ Wording fixes and a few minor fixes
 ## [1.0.14] 2019-12-19
 
 ### Bug Fixing
-- Compatibilité : corrections diverses (xml + urls) 
+- Compatibilité : corrections diverses (xml + urls)
 
 ## [1.0.13] 2019-11-28
 
@@ -28,7 +31,7 @@ Wording fixes and a few minor fixes
 ## [1.0.12] 2019-03-07
 
 ### Magento 2.3
-- Compatibilité : Nouvelle version du module pour Magento 2.3  https://gitlab.com/ETransactions/Magento2 
+- Compatibilité : Nouvelle version du module pour Magento 2.3  https://gitlab.com/ETransactions/Magento2
 
 ## [1.0.11] 2019-02-06
 

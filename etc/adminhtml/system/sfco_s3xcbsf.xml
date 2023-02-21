@@ -22,10 +22,6 @@
 -->
 <include xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_include.xsd">
     <group id="sfco_s3xcbsf" translate="label" type="text" sortOrder="60" showInDefault="1" showInWebsite="1" showInStore="1">
-        <depends>
-            <field id="sfco_payments/sfco_s3xcb/active">0</field>
-        </depends>
-
         <attribute type="expanded">1</attribute>
         <label>Fee management - I pay the fees (no cost for the customer)</label>
 

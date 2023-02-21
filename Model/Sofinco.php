@@ -398,6 +398,7 @@ class Sofinco
 
         // Billing information
         $values['PBX_BILLING'] = $this->getBillingInformation($order);
+        $values['PBX_SHOPPINGCART'] = $this->getXmlShoppingCartInformation($order);
 
         // Amount
         $currencies = $this->_storeManager->getStore()->getAvailableCurrencyCodes();
@@ -701,6 +702,23 @@ class Sofinco
         return trim(substr($simpleXMLElement->asXML(), 21));
     }
 
+    /**
+     * Generate XML value for PBX_SHOPPINGCART parameter
+     *
+     * @param  Mage_Sales_Model_Order $order
+     * @return string
+     */
+    public function getXmlShoppingCartInformation(Order $order)
+    {
+        $totalQuantity = 0;
+        foreach ($order->getAllVisibleItems() as $item) {
+            $totalQuantity += (int)$item->getQtyOrdered();
+        }
+        $totalQuantity = max(1, min($totalQuantity, 99));
+
+        return sprintf('<?xml version="1.0" encoding="utf-8"?><shoppingcart><total><totalQuantity>%d</totalQuantity></total></shoppingcart>', $totalQuantity);
+    }
+
     private function removeAccents($string)
     {
         $table = array(
@@ -824,20 +842,6 @@ class Sofinco
         $urls = $config->getSystemUrls();
         if (empty($urls)) {
             $message = 'Missing URL for Sofinco system in configuration';
-            throw new \LogicException(__($message));
-        }
-
-        $url = $this->checkUrls($urls);
-
-        return $url;
-    }
-
-    public function getResponsiveUrl()
-    {
-        $config = $this->getConfig();
-        $urls = $config->getResponsiveUrls();
-        if (empty($urls)) {
-            $message = 'Missing URL for Sofinco responsive in configuration';
             throw new \LogicException(__($message));
         }
 

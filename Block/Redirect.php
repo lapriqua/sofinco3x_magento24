@@ -24,17 +24,14 @@ namespace Sofinco\Epayment\Block;
 class Redirect extends \Magento\Framework\View\Element\Template
 {
     protected $_objectManager;
-    protected $_helper;
 
     public function __construct(
         \Magento\Framework\View\Element\Template\Context $context,
-        array $data = [],
-        \Sofinco\Epayment\Helper\Data $helper
+        array $data = []
     ) {
         parent::__construct($context, $data);
 
         $this->_objectManager = \Magento\Framework\App\ObjectManager::getInstance();
-        $this->_helper = $helper;
     }
 
     public function getFormFields()
@@ -74,13 +71,6 @@ class Redirect extends \Magento\Framework\View\Element\Template
     {
         $sofinco = $this->_objectManager->get('Sofinco\Epayment\Model\Sofinco');
         $urls = $sofinco->getConfig()->getSystemUrls();
-        return $sofinco->checkUrls($urls);
-    }
-
-    public function getResponsiveUrl()
-    {
-        $sofinco = $this->_objectManager->get('Sofinco\Epayment\Model\Sofinco');
-        $urls = $sofinco->getConfig()->getResponsiveUrls();
         return $sofinco->checkUrls($urls);
     }
 }

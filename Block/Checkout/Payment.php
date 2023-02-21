@@ -46,6 +46,11 @@ class Payment extends Template
     {
         $result = [];
         $cards = $this->getMethod()->getCards();
+
+        if ($this->getMethod()->getConfigData('cctypes') == null) {
+            return $result;
+        }
+
         $selected = explode(',', $this->getMethod()->getConfigData('cctypes'));
         foreach ($cards as $code => $card) {
             if (in_array($code, $selected)) {
@@ -59,6 +64,11 @@ class Payment extends Template
     {
         $result = [];
         $cards = $this->getMethod()->getCards();
+
+        if ($this->getMethod()->getConfigData('cctypes') == null) {
+            return $result;
+        }
+
         $selected = explode(',', $this->getMethod()->getConfigData('cctypes'));
         foreach ($cards as $code => $card) {
             if (in_array($code, $selected)) {

@@ -60,6 +60,11 @@ final class SfcofinancialConfigProvider implements ConfigProviderInterface
 
         $cards = [];
         $types = $sfcofinancialConfig->getCards();
+
+        if (is_null($types)) {
+            return $cards;
+        }
+
         if (!is_array($types)) {
             $types = explode(',', $types);
         }

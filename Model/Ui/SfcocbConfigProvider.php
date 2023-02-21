@@ -59,6 +59,11 @@ final class SfcocbConfigProvider implements ConfigProviderInterface
 
         $cards = [];
         $types = $sfcocbConfig->getCards();
+
+        if (is_null($types)) {
+            return $cards;
+        }
+
         if (!is_array($types)) {
             $types = explode(',', $types);
         }

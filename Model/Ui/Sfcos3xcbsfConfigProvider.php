@@ -60,6 +60,11 @@ final class Sfcos3xcbsfConfigProvider implements ConfigProviderInterface
 
         $cards = [];
         $types = $sfcos3xcbsfConfig->getCards();
+
+        if (is_null($types)) {
+            return $cards;
+        }
+
         if (!is_array($types)) {
             $types = explode(',', $types);
         }
