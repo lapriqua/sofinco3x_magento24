@@ -31,13 +31,14 @@ class Payment extends \Magento\Framework\App\Action\Action implements CsrfAwareA
     /**
      * @var \Magento\Framework\View\Result\PageFactory
      */
-    protected $resultPageFactory;
-    protected $_quoteRepository;
-    protected $_logger;
-    protected $_checkoutSession;
-    protected $_sofincoConfig;
-    protected $_sofinco;
-    protected $_registry;
+    protected                                           $resultPageFactory;
+    protected                                           $_quoteRepository;
+    protected                                           $_logger;
+    protected                                           $_checkoutSession;
+    protected                                           $_sofincoConfig;
+    protected                                           $_sofinco;
+    protected                                           $_registry;
+    private \Magento\Framework\Message\ManagerInterface $_messageManager;
 
     /**
      * @param \Magento\Framework\App\Action\Context                        $context

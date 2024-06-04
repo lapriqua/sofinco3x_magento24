@@ -21,6 +21,8 @@
 
 namespace Sofinco\Epayment\Model;
 
+use Laminas\Http\Request;
+use Magento\Framework\HTTP\LaminasClient;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\Payment\Transaction;
 use \SimpleXMLElement;
@@ -328,21 +330,21 @@ class Sofinco
         $url = $this->checkUrls($urls);
 
         // Init client
-        $clt = new \Magento\Framework\HTTP\ZendClient(
+        $clt = new LaminasClient(
             $url,
             [
-            'maxredirects' => 0,
-            'useragent' => 'Magento Sofinco module',
-            'timeout' => 5,
+                'maxredirects' => 0,
+                'useragent' => 'Magento Sofinco module',
+                'timeout' => 5,
             ]
         );
-        $clt->setMethod(\Magento\Framework\HTTP\ZendClient::POST);
-        $clt->setRawData(http_build_query($fields));
+        $clt->setMethod(Request::METHOD_POST);
+        $clt->setRawBody(http_build_query($fields));
 
         // Do call
-        $response = $clt->request();
+        $response = $clt->send();
 
-        if ($response->isSuccessful()) {
+        if ($response->isSuccess()) {
             // Process result
             $result = [];
             parse_str($response->getBody(), $result);
@@ -537,7 +539,7 @@ class Sofinco
     public function checkUrls(array $urls)
     {
         // Init client
-        $client = new \Magento\Framework\HTTP\ZendClient(
+        $client = new LaminasClient(
             null,
             [
             'maxredirects' => 0,
@@ -545,7 +547,7 @@ class Sofinco
             'timeout' => 5,
             ]
         );
-        $client->setMethod(\Magento\Framework\HTTP\ZendClient::GET);
+        $client->setMethod(Request::METHOD_GET);
 
         $error = null;
         foreach ($urls as $url) {
@@ -553,8 +555,8 @@ class Sofinco
             $client->setUri($testUrl);
 
             try {
-                $response = $client->request();
-                if ($response->isSuccessful()) {
+                $response = $client->send();
+                if ($response->isSuccess()) {
                     return $url;
                 }
             } catch (\LogicException $e) {

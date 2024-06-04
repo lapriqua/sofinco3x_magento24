@@ -23,6 +23,8 @@ namespace Sofinco\Epayment\Controller\Adminhtml\Partial;
 
 class Index extends \Magento\Backend\App\Action
 {
+    private \Magento\Framework\View\Result\PageFactory $resultPageFactory;
+
     public function __construct(
         \Magento\Backend\App\Action\Context $context,
         \Magento\Framework\View\Result\PageFactory $resultPageFactory
